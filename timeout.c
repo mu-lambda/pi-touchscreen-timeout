@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
         /* new sleep code to bring CPU usage down from 100% on a core */
         struct timespec sleepTime;
         sleepTime.tv_sec = 0;
-        sleepTime.tv_nsec = 10000000L;  /* 0.1 seconds - larger values may reduce load even more */
+        sleepTime.tv_nsec = 50000000L;  /* 0.5 seconds - larger values may reduce load even more */
 
         lightfd = open(backlight_path, O_RDWR | O_NONBLOCK);
 
