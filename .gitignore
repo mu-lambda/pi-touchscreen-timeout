@@ -1,5 +1,5 @@
 # Compiled binary
-timeout
+backlight-timeout
 
 # Object files
 *.o
