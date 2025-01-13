@@ -27,6 +27,9 @@
      Include new headers (ctype.h, unistd.h) for isdigit and read, write, lseek
      Take backlight name from arguments
 
+   2025-01-13 - MuLambda
+     Use better values for bl_power.
+
 */
 
 #include <stdio.h>
@@ -38,6 +41,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <linux/fb.h>
+
+const char UNBLANK = '0' + FB_BLANK_UNBLANK;
+const char POWERDOWN = '0' + FB_BLANK_POWERDOWN;
 
 int main(int argc, char* argv[]){
         if (argc < 4) {
@@ -124,14 +131,14 @@ int main(int argc, char* argv[]){
                 lseek(lightfd, 0, SEEK_SET);
                 light_size = read(lightfd, &read_on, sizeof(char));
                 if(light_size == sizeof(char) && read_on != on) {
-                        if (read_on == '0') {
+                        if (read_on == UNBLANK) {
                                 printf("Power enabled externally - Timeout reset\n");
-                                on = '0';
+                                on = UNBLANK;
                                 touch = now;
                         }
-                        else if (read_on == '1') {
+                        else {
                                 printf("Power disabled externally\n");
-                                on = '1';
+                                on = read_on;
                         }
                 }
 
@@ -141,18 +148,18 @@ int main(int argc, char* argv[]){
                                 printf("%s Value: %d, Code: %x\n", device[i], event[0].value, event[0].code);
                                 touch = now;
 
-                                if(on == '1') {
+                                if(on != UNBLANK) {
                                         printf("Turning On\n");
-                                        on = '0';
+                                        on = UNBLANK;
                                         write(lightfd, &on, sizeof(char));
                                 }
                         }
                 }
 
                 if(difftime(now, touch) > timeout) {
-                        if(on == '0') {
+                        if(on == UNBLANK) {
                                 printf("Turning Off\n");
-                                on = '1';
+                                on = POWERDOWN;
                                 write(lightfd, &on, sizeof(char));
                         }
                 }
