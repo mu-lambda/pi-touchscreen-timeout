@@ -43,6 +43,8 @@
 #include <ctype.h>
 #include <linux/fb.h>
 
+#include "motion.h"
+
 const char UNBLANK = '0' + FB_BLANK_UNBLANK;
 const char POWERDOWN = '0' + FB_BLANK_POWERDOWN;
 
