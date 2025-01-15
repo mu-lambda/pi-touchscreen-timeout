@@ -57,6 +57,14 @@ void set_mincount(int fd, int mcount)
         printf("Error tcsetattr: %s\n", strerror(errno));
 }
 
+typedef enum {
+    INITIAL,
+    O_FOUND,
+    N_FOUND,
+    F_FOUND,
+    ON_DECTECTED,
+    OFF_DETECTED
+} state_t;
 
 int is_motion(char *portname)
 {
@@ -83,19 +91,47 @@ int is_motion(char *portname)
 
 
     /* simple noncanonical input */
+    state_t state = INITIAL;
     do {
         unsigned char buf[80];
         int rdlen;
 
         rdlen = read(fd, buf, sizeof(buf) - 1);
         if (rdlen > 0) {
+            for (int i = 0; i < rdlen; i++) {
+                unsigned char c = buf[i];
+                switch(state) {
+                    case INITIAL:
+                        switch(c) {
+                            case 'O': state = O_FOUND; break;                            
+                            default: state = INITIAL; break;
+                        }
+                        break;
+                    case O_FOUND:
+                        switch(c) {
+                            case 'N': state = ON_DECTECTED; break;
+                            case 'F': state = F_FOUND; break;
+                            default: state = INITIAL; break;
+                        }
+                        break;
+                    case F_FOUND:
+                        switch(c) {
+                            case 'F': state = OFF_DETECTED; break;
+                            default: state = INITIAL; break;
+                        }
+                    default: state = INITIAL; break;                            
+                }
+            }
             buf[rdlen] = 0;
             printf("Read %d: \"%s\"\n", rdlen, buf);
+
         } else if (rdlen < 0) {
             printf("Error from read: %d: %s\n", rdlen, strerror(errno));
         } else {  /* rdlen == 0 */
             printf("Timeout from read\n");
         }               
-        /* repeat read to get full message */
+        if (state == ON_DECTECTED || state == OFF_DETECTED) {
+            return state == ON_DECTECTED;
+        }
     } while (1);
 }
