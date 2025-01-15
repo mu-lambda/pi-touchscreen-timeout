@@ -119,7 +119,7 @@ int is_motion(char *portname)
 
     /* simple noncanonical input */
     state_t state = INITIAL;
-    do {
+    for (int counter = 0; counter < 1000; counter++) {
         unsigned char buf[80];
         int rdlen;
 
@@ -133,12 +133,17 @@ int is_motion(char *portname)
 
         } else if (rdlen < 0) {
             printf("Error from read: %d: %s\n", rdlen, strerror(errno));
+            break;
         } else {  /* rdlen == 0 */
             printf("Timeout from read\n");
+            break;
         }
         if (state == ON_DETECTED || state == OFF_DETECTED) {
             close(fd);
             return state == ON_DETECTED;
         }
-    } while (1);
+    }
+    close(fd);
+    printf("Failed reading from motion detector");
+    return 0;
 }
