@@ -1,5 +1,6 @@
 # Compiled binary
 backlight-timeout
+motion
 
 # Object files
 *.o
