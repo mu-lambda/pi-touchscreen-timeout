@@ -146,8 +146,10 @@ int main(int argc, char* argv[]){
 
                 int event_detected = 0;
                 if (is_motion("/dev/ttyAMA0")) {
-                    printf("Motion detected\n");
                     event_detected = 1;
+                } 
+                else {
+                    printf("No motion detected\n");
                 }
                 for (i = 0; i < num_dev; i++) {
                         event_size = read(eventfd[i], event, size*64);
