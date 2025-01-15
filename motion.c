@@ -98,7 +98,7 @@ int is_motion(char *portname)
 
         rdlen = read(fd, buf, sizeof(buf) - 1);
         if (rdlen > 0) {
-            for (int i = 0; i < rdlen; i++) {
+            for (int i = 0; i < rdlen && state != ON_DECTECTED && state != OFF_DETECTED; i++) {
                 unsigned char c = buf[i];
                 switch(state) {
                     case INITIAL:
