@@ -122,8 +122,8 @@ int is_motion(char *portname)
                     default: state = INITIAL; break;                            
                 }
             }
-            buf[rdlen] = 0;
-            printf("Read %d: \"%s\"\n", rdlen, buf);
+            //buf[rdlen] = 0;
+            //printf("Read %d: \"%s\"\n", rdlen, buf);
 
         } else if (rdlen < 0) {
             printf("Error from read: %d: %s\n", rdlen, strerror(errno));
@@ -131,6 +131,7 @@ int is_motion(char *portname)
             printf("Timeout from read\n");
         }               
         if (state == ON_DECTECTED || state == OFF_DETECTED) {
+            close(fd);
             return state == ON_DECTECTED;
         }
     } while (1);
