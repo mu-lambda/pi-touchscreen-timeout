@@ -47,50 +47,79 @@
 
 const char UNBLANK = '0' + FB_BLANK_UNBLANK;
 const char POWERDOWN = '0' + FB_BLANK_POWERDOWN;
+static void usage() {
+        printf("Usage: timeout <timeout_sec> <backlight> [--motion <path>] [<device> <device>...]\n");
+        printf("    Backlights are in /sys/class/backlight/....\n");
+        printf("    Use lsinput to see input devices.\n");
+        printf("    Device to use is shown as /dev/input/....\n");
+}
 
 int main(int argc, char* argv[]){
         if (argc < 4) {
-                printf("Usage: timeout <timeout_sec> <backlight> <device> [<device>...]\n");
-                printf("    Backlights are in /sys/class/backlight/....\n");
-                printf("    Use lsinput to see input devices.\n");
-                printf("    Device to use is shown as /dev/input/....\n");
+                usage();
                 exit(1);
         }
-        int i;
-        int tlen;
+        // Parse arguments.
+        int current_arg = 1;
         int timeout;
-
-        tlen = strlen(argv[1]);
-        for (i=0;i<tlen; i++)
-                if (!isdigit(argv[1][i])) {
-                        printf ("Entered timeout value is not a number\n");
-                        exit(1);
+        {
+            int tlen = strlen(argv[current_arg]);
+            for (int i=0;i<tlen; i++) {
+                if (!isdigit(argv[current_arg][i])) {
+                    printf ("Entered timeout value is not a number\n");
+                    exit(1);
                 }
-        timeout = atoi(argv[1]);
+            }
+            timeout = atoi(argv[current_arg]);
+        }
+        current_arg++;
 
         char backlight_path[64] = "";
-        strcat(backlight_path, argv[2]);
-        strcat(backlight_path, "/bl_power");
+        {
+                strcat(backlight_path, argv[current_arg]);
+                strcat(backlight_path, "/bl_power");
+        }
+        current_arg++;
 
-        int num_dev = argc - 3;
+        char *motion_sensor = 0;
+        if (strcmp("--motion", argv[current_arg]) == 0) {
+                current_arg++;
+                if (current_arg >= argc) {
+                        usage();
+                        exit(1);
+                }
+                motion_sensor = argv[current_arg];
+                current_arg++;
+        }
+
+        int num_dev = argc - current_arg;
         int eventfd[num_dev];
         char *device[num_dev];
-        for (i = 0; i < num_dev; i++) {
-                device[i] = argv[i+3];
+        {
+            for (int i = 0; i < num_dev; i++) {
+                device[i] = argv[current_arg++];
 
                 int event_dev = open(device[i], O_RDONLY | O_NONBLOCK);
                 if(event_dev == -1){
-                        int err = errno;
-                        printf("Error opening %s: %d\n", device[i], err);
-                        exit(1);
+                    int err = errno;
+                    printf("Error opening %s: %d\n", device[i], err);
+                    exit(1);
                 }
                 eventfd[i] = event_dev;
+            }
         }
-        printf("Using input device%s: ", (num_dev > 1) ? "s" : "");
-        for (i = 0; i < num_dev; i++) {
-                printf("%s ", device[i]);
+        // End argument parsing.
+        
+        if (motion_sensor != 0) {
+                printf("Using motion sensor: %s\n", motion_sensor);
         }
-        printf("\n");
+        if (num_dev > 0) {
+                printf("Using input device%s: ", (num_dev > 1) ? "s" : "");
+                for (int i = 0; i < num_dev; i++) {
+                        printf("%s ", device[i]);
+                }
+                printf("\n");
+        }
 
         printf("Starting...\n");
         struct input_event event[64];
@@ -148,17 +177,19 @@ int main(int argc, char* argv[]){
                 int event_detected = 0;
 
                 // Motion detection.
-                int current_motion_state = is_motion("/dev/ttyAMA0");
-                if (current_motion_state) {
-                    event_detected = 1;
-                }
-                if (motion_state != current_motion_state) {
-                    motion_state = current_motion_state;
-                    printf("Motion state changed to %s\n", (motion_state ? "on" : "off"));
+                if (motion_sensor != 0) {
+                        int current_motion_state = is_motion("/dev/ttyAMA0");
+                        if (current_motion_state) {
+                            event_detected = 1;
+                        }
+                        if (motion_state != current_motion_state) {
+                            motion_state = current_motion_state;
+                            printf("Motion state changed to %s\n", (motion_state ? "on" : "off"));
+                        }
                 }
 
                 // Touch detection.
-                for (i = 0; i < num_dev; i++) {
+                for (int i = 0; i < num_dev; i++) {
                         event_size = read(eventfd[i], event, size*64);
                         if(event_size != -1) {
                                 printf("%s Value: %d, Code: %x\n", device[i], event[0].value, event[0].code);
