@@ -1,3 +1,4 @@
+CFLAGS=-O3
 motion: motion.o motion_main.o
 	$(CC) -o $@ $^
 
