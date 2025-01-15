@@ -34,3 +34,6 @@ backlight-timeout
 # Debug files
 *.dSYM/
 *.su
+
+# Editor
+*.swp
