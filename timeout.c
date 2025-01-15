@@ -51,7 +51,7 @@ const char POWERDOWN = '0' + FB_BLANK_POWERDOWN;
 int main(int argc, char* argv[]){
         if (argc < 4) {
                 printf("Usage: timeout <timeout_sec> <backlight> <device> [<device>...]\n");
-		printf("    Backlights are in /sys/class/backlight/....\n");
+                printf("    Backlights are in /sys/class/backlight/....\n");
                 printf("    Use lsinput to see input devices.\n");
                 printf("    Device to use is shown as /dev/input/....\n");
                 exit(1);
@@ -59,6 +59,7 @@ int main(int argc, char* argv[]){
         int i;
         int tlen;
         int timeout;
+
         tlen = strlen(argv[1]);
         for (i=0;i<tlen; i++)
                 if (!isdigit(argv[1][i])) {
@@ -67,9 +68,9 @@ int main(int argc, char* argv[]){
                 }
         timeout = atoi(argv[1]);
 
-	char backlight_path[64] = "";
-	strcat(backlight_path, argv[2]);
-	strcat(backlight_path, "/bl_power");
+        char backlight_path[64] = "";
+        strcat(backlight_path, argv[2]);
+        strcat(backlight_path, "/bl_power");
 
         int num_dev = argc - 3;
         int eventfd[num_dev];
