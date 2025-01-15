@@ -129,7 +129,7 @@ int main(int argc, char* argv[]){
 
         while(1) {
                 now = time(NULL);
-                
+
                 lseek(lightfd, 0, SEEK_SET);
                 light_size = read(lightfd, &read_on, sizeof(char));
                 if(light_size == sizeof(char) && read_on != on) {
@@ -144,18 +144,26 @@ int main(int argc, char* argv[]){
                         }
                 }
 
-                for (i = 0; i < num_dev; i++) {               
+                int event_detected = 0;
+                if (is_motion("/dev/ttyAMA0")) {
+                    printf("Motion detected\n");
+                    event_detected = 1;
+                }
+                for (i = 0; i < num_dev; i++) {
                         event_size = read(eventfd[i], event, size*64);
                         if(event_size != -1) {
                                 printf("%s Value: %d, Code: %x\n", device[i], event[0].value, event[0].code);
-                                touch = now;
-
-                                if(on != UNBLANK) {
-                                        printf("Turning On\n");
-                                        on = UNBLANK;
-                                        write(lightfd, &on, sizeof(char));
-                                }
+                                event_detected = 1;
                         }
+                }
+                if (event_detected) {
+                    touch = now;
+
+                    if(on != UNBLANK) {
+                        printf("Turning On\n");
+                        on = UNBLANK;
+                        write(lightfd, &on, sizeof(char));
+                    }
                 }
 
                 if(difftime(now, touch) > timeout) {
