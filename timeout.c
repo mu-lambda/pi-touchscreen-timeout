@@ -99,6 +99,8 @@ int main(int argc, char* argv[]){
         int event_size;
         int light_size;
         int size = sizeof(struct input_event);
+
+        int motion_state = -1;
         char read_on;
         char on;
 
@@ -145,12 +147,18 @@ int main(int argc, char* argv[]){
                 }
 
                 int event_detected = 0;
-                if (is_motion("/dev/ttyAMA0")) {
+
+                // Motion detection.
+                int current_motion_state = is_motion("/dev/ttyAMA0");
+                if (current_motion_state) {
                     event_detected = 1;
-                } 
-                else if (on == UNBLANK) {
-                    printf("No motion detected - candidate for turning off\n");
                 }
+                if (motion_state != current_motion_state) {
+                    motion_state = current_motion_state;
+                    printf("Motion state changed to %s\n", (motion_state ? "on" : "off"));
+                }
+
+                // Touch detection.
                 for (i = 0; i < num_dev; i++) {
                         event_size = read(eventfd[i], event, size*64);
                         if(event_size != -1) {
