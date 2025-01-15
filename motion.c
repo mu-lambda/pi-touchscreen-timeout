@@ -1,5 +1,5 @@
 #include <errno.h>
-#include <fcntl.h> 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,9 +62,36 @@ typedef enum {
     O_FOUND,
     N_FOUND,
     F_FOUND,
-    ON_DECTECTED,
+    ON_DETECTED,
     OFF_DETECTED
 } state_t;
+
+static state_t next_state(const state_t state, unsigned char c) {
+    switch(state) {
+        case INITIAL:
+            switch(c) {
+                case 'O': return O_FOUND;
+                default: return INITIAL;
+            }
+            break;
+        case O_FOUND:
+            switch(c) {
+                case 'N': return  ON_DETECTED;
+                case 'F': return F_FOUND;
+                default: return INITIAL;
+            }
+            break;
+        case F_FOUND:
+            switch(c) {
+                case 'F': return OFF_DETECTED;
+                default: return INITIAL;
+            }
+        case ON_DETECTED:
+        case OFF_DETECTED:
+        default:
+            return state;
+    }
+}
 
 int is_motion(char *portname)
 {
@@ -98,29 +125,8 @@ int is_motion(char *portname)
 
         rdlen = read(fd, buf, sizeof(buf) - 1);
         if (rdlen > 0) {
-            for (int i = 0; i < rdlen && state != ON_DECTECTED && state != OFF_DETECTED; i++) {
-                unsigned char c = buf[i];
-                switch(state) {
-                    case INITIAL:
-                        switch(c) {
-                            case 'O': state = O_FOUND; break;                            
-                            default: state = INITIAL; break;
-                        }
-                        break;
-                    case O_FOUND:
-                        switch(c) {
-                            case 'N': state = ON_DECTECTED; break;
-                            case 'F': state = F_FOUND; break;
-                            default: state = INITIAL; break;
-                        }
-                        break;
-                    case F_FOUND:
-                        switch(c) {
-                            case 'F': state = OFF_DETECTED; break;
-                            default: state = INITIAL; break;
-                        }
-                    default: state = INITIAL; break;                            
-                }
+            for (int i = 0; i < rdlen && state != ON_DETECTED && state != OFF_DETECTED; i++) {
+                state = next_state(state, buf[i]);
             }
             //buf[rdlen] = 0;
             //printf("Read %d: \"%s\"\n", rdlen, buf);
@@ -129,10 +135,10 @@ int is_motion(char *portname)
             printf("Error from read: %d: %s\n", rdlen, strerror(errno));
         } else {  /* rdlen == 0 */
             printf("Timeout from read\n");
-        }               
-        if (state == ON_DECTECTED || state == OFF_DETECTED) {
+        }
+        if (state == ON_DETECTED || state == OFF_DETECTED) {
             close(fd);
-            return state == ON_DECTECTED;
+            return state == ON_DETECTED;
         }
     } while (1);
 }
