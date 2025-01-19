@@ -43,7 +43,7 @@ To also add motion detection, use
 ```
 sudo ./backlight-timeout 10 /sys/class/backlight/rpi_backlight --motion /dev/ttyAMA0 /dev/input/event0
 ```
-Replace `/dev/ttyAMA0` with serial port fo HMMD mmWave Sensor.
+Replace `/dev/ttyAMA0` with serial port of HMMD mmWave Sensor.
 
 **Note:** It must be run as root or with `sudo` to be able to access the backlight.
 
