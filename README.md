@@ -18,22 +18,32 @@ from the touchscreen, keyboard, mouse, etc., and `/sys/class/backlight/rpi-backl
 to turn the backlight on and off. The event device is a command-line parameter without the
 /dev/input/ path specification.
 
+This progam also supports waking up (and powering down) on motion detection using 
+[HMMD sensor from WaveShark](https://www.waveshare.com/hmmd-mmwave-sensor.htm).
+
+
 # Installation
 
 Clone the repository and change directories:
 ```
-git clone https://github.com/timothyhollabaugh/pi-touchscreen-timeout.git
+git clone https://github.com/mu-lambda/pi-touchscreen-timeout.git
 cd pi-touchscreen-timeout
 ```
 
 Build and run it!
 ```
-gcc timeout.c -o timeout
-sudo ./timeout 10 rpi_backlight event0
+make backlight-timeout
+sudo ./backlight-timeout 10 /sys/class/backlight/rpi_backlight /dev/input/event0
 ```
 Your backlight might be named differently. To find your backlight name, use `ls /sys/class/backlight/` and replace `rpi_backlight` in the command above
 
 Multiple devices may be specified.
+
+To also add motion detection, use
+```
+sudo ./backlight-timeout 10 /sys/class/backlight/rpi_backlight --motion /dev/ttyAMA0 /dev/input/event0
+```
+Replace `/dev/ttyAMA0` with serial port fo HMMD mmWave Sensor.
 
 **Note:** It must be run as root or with `sudo` to be able to access the backlight.
 
