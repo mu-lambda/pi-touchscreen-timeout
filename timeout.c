@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
 
                 // Motion detection.
                 if (motion_sensor != 0) {
-                        int current_motion_state = is_motion("/dev/ttyAMA0");
+                        int current_motion_state = is_motion(motion_sensor);
                         if (current_motion_state) {
                                 event_detected = 1;
                         }
