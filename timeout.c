@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
                                 int err = errno;
                                 printf("Error opening %s: %d\n", device[i],
                                        err);
+                                fflush(stdout);
                                 exit(1);
                         }
                         eventfd[i] = event_dev;
@@ -117,6 +118,7 @@ int main(int argc, char *argv[]) {
 
         if (motion_sensor != 0) {
                 printf("Using motion sensor: %s\n", motion_sensor);
+                fflush(stdout);
         }
         if (num_dev > 0) {
                 printf("Using input device%s: ", (num_dev > 1) ? "s" : "");
@@ -124,9 +126,11 @@ int main(int argc, char *argv[]) {
                         printf("%s ", device[i]);
                 }
                 printf("\n");
+                fflush(stdout);
         }
 
         printf("Starting...\n");
+        fflush(stdout);
         struct input_event event[64];
         int lightfd;
         int event_size;
@@ -172,10 +176,12 @@ int main(int argc, char *argv[]) {
                         if (read_on == UNBLANK) {
                                 printf("Power enabled externally - Timeout "
                                        "reset\n");
+                                fflush(stdout);
                                 on = UNBLANK;
                                 touch = now;
                         } else {
                                 printf("Power disabled externally\n");
+                                fflush(stdout);
                                 on = read_on;
                         }
                 }
@@ -192,6 +198,7 @@ int main(int argc, char *argv[]) {
                                 motion_state = current_motion_state;
                                 printf("Motion state changed to %s\n",
                                        (motion_state ? "on" : "off"));
+                                fflush(stdout);
                         }
                 }
 
@@ -201,6 +208,7 @@ int main(int argc, char *argv[]) {
                         if (event_size != -1) {
                                 printf("%s Value: %d, Code: %x\n", device[i],
                                        event[0].value, event[0].code);
+                                fflush(stdout);
                                 event_detected = 1;
                         }
                 }
@@ -209,6 +217,7 @@ int main(int argc, char *argv[]) {
 
                         if (on != UNBLANK) {
                                 printf("Turning On\n");
+                                fflush(stdout);
                                 on = UNBLANK;
                                 write(lightfd, &on, sizeof(char));
                         }
@@ -217,6 +226,7 @@ int main(int argc, char *argv[]) {
                 if (difftime(now, touch) > timeout) {
                         if (on == UNBLANK) {
                                 printf("Turning Off\n");
+                                fflush(stdout);
                                 on = POWERDOWN;
                                 write(lightfd, &on, sizeof(char));
                         }

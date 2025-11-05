@@ -36,6 +36,7 @@ int set_interface_attribs(int fd, int speed) {
 
         if (tcsetattr(fd, TCSANOW, &tty) != 0) {
                 printf("Error from tcsetattr: %s\n", strerror(errno));
+                fflush(stdout);
                 return -1;
         }
         return 0;
@@ -46,14 +47,17 @@ void set_mincount(int fd, int mcount) {
 
         if (tcgetattr(fd, &tty) < 0) {
                 printf("Error tcgetattr: %s\n", strerror(errno));
+                fflush(stdout);
                 return;
         }
 
         tty.c_cc[VMIN] = mcount ? 1 : 0;
         tty.c_cc[VTIME] = 5; /* half second timer */
 
-        if (tcsetattr(fd, TCSANOW, &tty) < 0)
+        if (tcsetattr(fd, TCSANOW, &tty) < 0) {
                 printf("Error tcsetattr: %s\n", strerror(errno));
+                fflush(stdout);
+        }
 }
 
 typedef enum {
@@ -109,6 +113,7 @@ int is_motion(char *portname) {
         fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
         if (fd < 0) {
                 printf("Error opening %s: %s\n", portname, strerror(errno));
+                fflush(stdout);
                 return -1;
         }
         /*baudrate 115200, 8 bits, no parity, 1 stop bit */
@@ -119,6 +124,7 @@ int is_motion(char *portname) {
         wlen = write(fd, xstr, xlen);
         if (wlen != xlen) {
                 printf("Error from write: %d, %d\n", wlen, errno);
+                fflush(stdout);
         }
         tcdrain(fd); /* delay for output */
 
@@ -141,9 +147,11 @@ int is_motion(char *portname) {
                 } else if (rdlen < 0) {
                         printf("Error from read: %d: %s\n", rdlen,
                                strerror(errno));
+                        fflush(stdout);
                         break;
                 } else { /* rdlen == 0 */
                         printf("Timeout from read\n");
+                        fflush(stdout);
                         break;
                 }
                 if (state == ON_DETECTED || state == OFF_DETECTED) {
@@ -153,5 +161,6 @@ int is_motion(char *portname) {
         }
         close(fd);
         printf("Failed reading from motion detector");
+        fflush(stdout);
         return 0;
 }
